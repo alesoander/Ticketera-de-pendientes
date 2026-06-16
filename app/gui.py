@@ -102,6 +102,8 @@ class TaskBoardApp(tk.Tk):
         self.geometry("1000x620")
 
         self.webhook_queue: queue.Queue[dict] = queue.Queue()
+        self.webhook_host = webhook_host
+        self.webhook_port = webhook_port
         self.webhook_server = WebhookServer(self.webhook_queue.put, host=webhook_host, port=webhook_port)
 
         self._build_ui()
@@ -126,7 +128,9 @@ class TaskBoardApp(tk.Tk):
         self._build_active_tab()
         self._build_history_tab()
 
-        self.status_var = tk.StringVar(value="Webhook activo en http://127.0.0.1:5000/webhook/card")
+        self.status_var = tk.StringVar(
+            value=f"Webhook activo en http://{self.webhook_host}:{self.webhook_port}/webhook/card"
+        )
         ttk.Label(self, textvariable=self.status_var, relief="sunken", anchor="w", padding=6).grid(
             row=1, column=0, sticky="ew"
         )

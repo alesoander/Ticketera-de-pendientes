@@ -60,11 +60,7 @@ class WebhookServer:
             return
 
         self._server = make_server(self.host, self.port, self.app)
-
-        def _serve_forever() -> None:
-            self._server.serve_forever()
-
-        self._thread = threading.Thread(target=_serve_forever, daemon=True)
+        self._thread = threading.Thread(target=self._server.serve_forever, daemon=True)
         self._thread.start()
 
     def stop(self) -> None:
