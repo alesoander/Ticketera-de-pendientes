@@ -6,8 +6,7 @@ from typing import Callable
 from flask import Flask, jsonify, request
 from werkzeug.serving import make_server
 
-VALID_PRIORITIES = {"Alta", "Media", "Baja"}
-VALID_STATES = {"No iniciado", "Pendiente", "Terminado"}
+from app.constants import ESTADOS, PRIORIDADES
 
 
 class WebhookServer:
@@ -37,9 +36,9 @@ class WebhookServer:
 
             if not titulo:
                 return jsonify({"error": "El campo 'titulo' es obligatorio."}), 400
-            if prioridad not in VALID_PRIORITIES:
+            if prioridad not in set(PRIORIDADES):
                 return jsonify({"error": "Prioridad inválida. Use Alta, Media o Baja."}), 400
-            if estado not in VALID_STATES:
+            if estado not in set(ESTADOS):
                 return jsonify({"error": "Estado inválido. Use No iniciado, Pendiente o Terminado."}), 400
 
             payload = {
@@ -62,10 +61,10 @@ class WebhookServer:
 
         self._server = make_server(self.host, self.port, self.app)
 
-        def _serve() -> None:
+        def _serve_forever() -> None:
             self._server.serve_forever()
 
-        self._thread = threading.Thread(target=_serve, daemon=True)
+        self._thread = threading.Thread(target=_serve_forever, daemon=True)
         self._thread.start()
 
     def stop(self) -> None:

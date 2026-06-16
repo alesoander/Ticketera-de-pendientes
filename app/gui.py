@@ -4,6 +4,7 @@ import queue
 import tkinter as tk
 from tkinter import messagebox, ttk
 
+from app.constants import ESTADOS, ESTADOS_ACTIVOS, PRIORIDADES
 from app.database import CardDatabase
 from app.webhook_server import WebhookServer
 
@@ -52,13 +53,13 @@ class CardForm(tk.Toplevel):
         self.priority_var = tk.StringVar(value="Media")
         self.state_var = tk.StringVar(value="No iniciado")
 
-        ttk.Combobox(row, textvariable=self.priority_var, values=["Alta", "Media", "Baja"], state="readonly").grid(
+        ttk.Combobox(row, textvariable=self.priority_var, values=list(PRIORIDADES), state="readonly").grid(
             row=1, column=0, sticky="ew", padx=(0, 8)
         )
         ttk.Combobox(
             row,
             textvariable=self.state_var,
-            values=["No iniciado", "Pendiente", "Terminado"],
+            values=list(ESTADOS),
             state="readonly",
         ).grid(row=1, column=1, sticky="ew")
 
@@ -139,7 +140,7 @@ class TaskBoardApp(tk.Tk):
 
         ttk.Label(top, text="Prioridad:").grid(row=0, column=0, padx=(0, 4))
         self.priority_filter = tk.StringVar(value="Todas")
-        ttk.Combobox(top, textvariable=self.priority_filter, values=["Todas", "Alta", "Media", "Baja"], width=12, state="readonly").grid(
+        ttk.Combobox(top, textvariable=self.priority_filter, values=["Todas", *PRIORIDADES], width=12, state="readonly").grid(
             row=0, column=1, padx=(0, 8)
         )
 
@@ -148,7 +149,7 @@ class TaskBoardApp(tk.Tk):
         ttk.Combobox(
             top,
             textvariable=self.state_filter,
-            values=["Todos", "No iniciado", "Pendiente"],
+            values=["Todos", *ESTADOS_ACTIVOS],
             width=14,
             state="readonly",
         ).grid(row=0, column=3, padx=(0, 12))
@@ -295,7 +296,7 @@ class TaskBoardApp(tk.Tk):
             return
 
         card = self.db.get_card(card_id)
-        options = ["No iniciado", "Pendiente", "Terminado"]
+        options = list(ESTADOS)
         next_state = options[(options.index(card["estado"]) + 1) % len(options)]
         self.db.update_card(card_id, card["titulo"], card["descripcion"], card["prioridad"], next_state)
         self.refresh_tables()

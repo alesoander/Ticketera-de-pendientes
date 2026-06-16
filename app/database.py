@@ -5,8 +5,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-PRIORIDADES = {"Alta", "Media", "Baja"}
-ESTADOS = {"No iniciado", "Pendiente", "Terminado"}
+from app.constants import ESTADOS, ESTADOS_ACTIVOS, PRIORIDADES
 
 
 class CardDatabase:
@@ -44,12 +43,12 @@ class CardDatabase:
 
     @staticmethod
     def _validate_prioridad(prioridad: str) -> None:
-        if prioridad not in PRIORIDADES:
+        if prioridad not in set(PRIORIDADES):
             raise ValueError("Prioridad inválida. Use Alta, Media o Baja.")
 
     @staticmethod
     def _validate_estado(estado: str) -> None:
-        if estado not in ESTADOS:
+        if estado not in set(ESTADOS):
             raise ValueError("Estado inválido. Use No iniciado, Pendiente o Terminado.")
 
     def create_card(
@@ -120,24 +119,25 @@ class CardDatabase:
         return dict(row)
 
     def list_active_cards(self, prioridad: str = "Todas", estado: str = "Todos") -> list[dict[str, Any]]:
-        conditions = ["estado IN ('No iniciado', 'Pendiente')"]
         params: list[Any] = []
+
+        query = """
+            SELECT * FROM cards
+            WHERE estado IN ('No iniciado', 'Pendiente')
+        """
 
         if prioridad != "Todas":
             self._validate_prioridad(prioridad)
-            conditions.append("prioridad = ?")
+            query += " AND prioridad = ?"
             params.append(prioridad)
 
         if estado != "Todos":
-            if estado not in {"No iniciado", "Pendiente"}:
+            if estado not in set(ESTADOS_ACTIVOS):
                 raise ValueError("Filtro de estado inválido.")
-            conditions.append("estado = ?")
+            query += " AND estado = ?"
             params.append(estado)
 
-        where_clause = " AND ".join(conditions)
-        query = f"""
-            SELECT * FROM cards
-            WHERE {where_clause}
+        query += """
             ORDER BY
                 CASE prioridad WHEN 'Alta' THEN 1 WHEN 'Media' THEN 2 ELSE 3 END,
                 fecha_creacion DESC
