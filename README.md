@@ -7,7 +7,7 @@ SQLite es mejor para este caso porque mantiene integridad de datos, permite filt
 
 ## Arquitectura propuesta
 - **GUI:** Tkinter (`app/gui.py`)
-- **Persistencia local:** SQLite (`app/database.py`) en `data/cards.db`
+- **Persistencia local:** SQLite (`app/database.py`) en `<carpeta del exe>/data/cards.db`
 - **Webhook local:** Flask (`app/webhook_server.py`) en `http://127.0.0.1:5000/webhook/card`
 - **Punto de entrada:** `main.py`
 
@@ -15,18 +15,36 @@ SQLite es mejor para este caso porque mantiene integridad de datos, permite filt
 
 ```text
 Ticketera-de-pendientes/
+├── .github/
+│   └── workflows/
+│       └── build-exe.yml   # CI que genera ticketera.exe en Windows
 ├── app/
+│   ├── constants.py
 │   ├── database.py
 │   ├── gui.py
 │   └── webhook_server.py
-├── data/
 ├── tests/
 │   ├── test_database.py
 │   └── test_webhook.py
+├── build.ps1               # script de compilación para el desarrollador
 ├── main.py
 ├── requirements.txt
+├── ticketera.spec          # configuración reproducible de PyInstaller
 └── README.md
 ```
+
+## Uso para el usuario final (doble clic)
+
+1. Descarga `ticketera.exe` desde la pestaña **Releases** de este repositorio
+   (o del artefacto del último workflow en la pestaña **Actions**).
+2. Coloca el archivo en cualquier carpeta donde tengas permisos de escritura
+   (por ejemplo `Documentos\Ticketera\`).
+3. Haz **doble clic** en `ticketera.exe`.
+4. La base de datos SQLite se crea automáticamente en
+   `<carpeta donde está el .exe>\data\cards.db` la primera vez que abres la app.
+
+> No se requiere instalar Python, pip, ni ninguna dependencia. No se abre
+> ninguna ventana de consola.
 
 ## Funcionalidades implementadas
 - Creación manual de cards con:
@@ -45,7 +63,7 @@ Ticketera-de-pendientes/
 - Persistencia local: los datos permanecen al reiniciar la app
 - Webhook local para alta automática desde n8n
 
-## Ejecución local (Windows)
+## Ejecución local desde código fuente (desarrolladores)
 
 1. Crear y activar entorno virtual:
 
@@ -66,24 +84,47 @@ pip install -r requirements.txt
 python main.py
 ```
 
-## Compilar a `.exe` con PyInstaller
+## Compilar el `.exe` manualmente
 
-1. Instalar PyInstaller:
+### Opción A — script automático (recomendado)
+
+Ejecuta el script de build incluido. Crea el entorno virtual, instala todo y
+genera el ejecutable en un solo paso:
+
+```powershell
+.\build.ps1
+```
+
+El ejecutable queda en `dist\ticketera.exe`.
+
+### Opción B — comandos manuales
 
 ```powershell
 pip install pyinstaller
+pyinstaller ticketera.spec
 ```
 
-2. Generar ejecutable:
-
-```powershell
-pyinstaller --onefile --windowed --name ticketera main.py
-```
-
-3. Ejecutable generado en:
+Ejecutable generado en:
 
 ```text
 dist/ticketera.exe
+```
+
+## Generación automática de `.exe` con GitHub Actions
+
+El workflow `.github/workflows/build-exe.yml` construye el ejecutable en un
+runner de Windows y lo publica automáticamente:
+
+- **En cualquier push de tag** `v*` (ej. `v1.0.0`): crea una GitHub Release y
+  adjunta `ticketera.exe`.
+- **Manualmente**: abre la pestaña **Actions → Build Windows EXE → Run
+  workflow**.
+
+Para publicar una nueva versión:
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
 ```
 
 ## Webhook local para n8n
