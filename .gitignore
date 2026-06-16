@@ -5,20 +5,17 @@ __pycache__/
 *.pyd
 *.egg-info/
 *.egg
-dist/
-build/
 .eggs/
+
+# Build artefacts (PyInstaller and general)
+build/
+dist/
+*.spec.bak
 
 # Virtual environments
 .venv/
 venv/
 env/
-
-# PyInstaller
-# The spec file is committed intentionally; ignore generated build artefacts only
-build/
-dist/
-*.spec.bak
 
 # SQLite database (local data — not version controlled)
 data/
