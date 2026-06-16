@@ -123,8 +123,9 @@ class CardDatabase:
 
         query = """
             SELECT * FROM cards
-            WHERE estado IN ('No iniciado', 'Pendiente')
+            WHERE estado IN (?, ?)
         """
+        params.extend(ESTADOS_ACTIVOS)
 
         if prioridad != "Todas":
             self._validate_prioridad(prioridad)

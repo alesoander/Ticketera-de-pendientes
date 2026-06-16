@@ -300,8 +300,15 @@ class TaskBoardApp(tk.Tk):
             return
 
         card = self.db.get_card(card_id)
-        options = list(ESTADOS)
-        next_state = options[(options.index(card["estado"]) + 1) % len(options)]
+        state_transitions = {
+            "No iniciado": "Pendiente",
+            "Pendiente": "Terminado",
+            "Terminado": "Terminado",
+        }
+        next_state = state_transitions.get(card["estado"])
+        if next_state is None:
+            messagebox.showerror("Error", "La card tiene un estado no válido.")
+            return
         self.db.update_card(card_id, card["titulo"], card["descripcion"], card["prioridad"], next_state)
         self.refresh_tables()
 
