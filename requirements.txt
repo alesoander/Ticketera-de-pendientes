@@ -1,1 +1,2 @@
-Flask==3.0.3
+# No external runtime dependencies — the app uses only Python's standard library
+# (tkinter, sqlite3, pathlib, datetime).
