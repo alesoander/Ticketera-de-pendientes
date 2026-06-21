@@ -1,14 +1,13 @@
 # Ticketera de Pendientes (Desktop local para Windows)
 
-Aplicativo de escritorio para gestionar tareas en formato de cards, con persistencia local y creación automática vía webhook.
+Aplicativo de escritorio para gestionar tareas en formato de cards, con persistencia local SQLite.
 
 ## ¿Por qué SQLite en vez de CSV?
 SQLite es mejor para este caso porque mantiene integridad de datos, permite filtros/consultas robustas (prioridad/estado/histórico), evita errores de concurrencia comunes en CSV y facilita escalar o migrar el modelo sin romper compatibilidad.
 
-## Arquitectura propuesta
-- **GUI:** Tkinter (`app/gui.py`)
+## Arquitectura
+- **GUI:** Tkinter (`app/gui.py`) — diseño inspirado en [ui-test-copy](https://github.com/alesoander/ui-test-copy), con cards, header, navegación y badges de prioridad/estado.
 - **Persistencia local:** SQLite (`app/database.py`) en `<carpeta del exe>/data/cards.db`
-- **Webhook local:** Flask (`app/webhook_server.py`) en `http://127.0.0.1:5000/webhook/card`
 - **Punto de entrada:** `main.py`
 
 ## Estructura del proyecto
@@ -21,11 +20,9 @@ Ticketera-de-pendientes/
 ├── app/
 │   ├── constants.py
 │   ├── database.py
-│   ├── gui.py
-│   └── webhook_server.py
+│   └── gui.py
 ├── tests/
-│   ├── test_database.py
-│   └── test_webhook.py
+│   └── test_database.py
 ├── build.ps1               # script de compilación para el desarrollador
 ├── main.py
 ├── requirements.txt
@@ -46,22 +43,22 @@ Ticketera-de-pendientes/
 > No se requiere instalar Python, pip, ni ninguna dependencia. No se abre
 > ninguna ventana de consola.
 
-## Funcionalidades implementadas
-- Creación manual de cards con:
+## Funcionalidades
+- Creación de tareas con:
   - título
   - descripción
-  - prioridad (Alta/Media/Baja)
-  - estado (No iniciado/Pendiente/Terminado)
+  - prioridad (Alta / Media / Baja)
+  - estado (No iniciado / Pendiente / Terminado)
   - fecha de creación (automática)
   - fecha de término (automática al pasar a Terminado)
-- Vista principal con cards activas (No iniciado, Pendiente)
-- Histórico con cards terminadas
-- Filtros en vista activa por prioridad y estado
-- Edición de cards
-- Cambio rápido de estado
+- Vista **Activas**: tareas con estado No iniciado o Pendiente, en formato cards
+- Vista **Histórico**: tareas terminadas con fecha de creación y completado
+- Filtros en vista Activa por prioridad y estado
+- Filtro en Histórico por prioridad
+- Edición de tareas desde el menú de cada card
+- Cambio de estado directo desde el badge de estado en la card
 - Eliminación permanente (UI + SQLite, sin papelera)
 - Persistencia local: los datos permanecen al reiniciar la app
-- Webhook local para alta automática desde n8n
 
 ## Ejecución local desde código fuente (desarrolladores)
 
@@ -77,6 +74,9 @@ python -m venv .venv
 ```powershell
 pip install -r requirements.txt
 ```
+
+> La app solo usa la biblioteca estándar de Python (`tkinter`, `sqlite3`), por lo que
+> no hay dependencias externas que instalar.
 
 3. Ejecutar app:
 
@@ -127,63 +127,11 @@ git tag v1.0.0
 git push origin v1.0.0
 ```
 
-## Webhook local para n8n
-
-### Endpoint
-- `POST http://127.0.0.1:5000/webhook/card`
-
-### JSON mínimo
-
-```json
-{
-  "titulo": "Responder correo urgente",
-  "descripcion": "Cliente solicita respuesta sobre avance del proyecto",
-  "prioridad": "Alta"
-}
-```
-
-### JSON con estado opcional
-
-```json
-{
-  "titulo": "Responder correo urgente",
-  "descripcion": "Cliente solicita respuesta sobre avance del proyecto",
-  "prioridad": "Alta",
-  "estado": "No iniciado"
-}
-```
-
-> Si `estado` no llega, se usa `No iniciado`. Si no llega `fecha_creacion`, se genera automáticamente.
-
-### Ejemplo rápido en n8n
-- Nodo previo (ej. Gmail) detecta correo por condición.
-- Nodo **HTTP Request**:
-  - Method: `POST`
-  - URL: `http://127.0.0.1:5000/webhook/card`
-  - Body Content Type: `JSON`
-  - Body:
-
-```json
-{
-  "titulo": "{{$json.subject}}",
-  "descripcion": "{{$json.text}}",
-  "prioridad": "Alta",
-  "estado": "No iniciado"
-}
-```
-
 ## Validación rápida
 
 ```bash
 python -m unittest discover -v
 ```
-
-## Primera versión funcional mínima (MVP)
-Esta versión ya cumple:
-- operación 100% local
-- gestión completa de cards activas e histórico
-- persistencia local robusta
-- integración webhook local
 
 ## Sugerencias de mejora
 - Drag & drop tipo Kanban por columnas de estado
